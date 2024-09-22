@@ -1,6 +1,3 @@
-import matplotlib.pyplot as plt
-import numpy as np
-import random
 import streamlit as st
 
 
@@ -28,7 +25,7 @@ st.markdown(
     - Random Lines permite crear un conjunto de lineas generadas aleatoriamente eligiendo previamente
     algunos parametros para el estudio y grafica en el plano dichas lineas y su solución.
     </div>
-    
+
     <div style="text-align: justify;">
     - Upload Lines recibe un archivo CSV que contiene las coordenadas de los puntos que forman las líneas y 
     grafica en el plano dichas lineas y su solución.
