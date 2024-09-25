@@ -43,7 +43,7 @@ st.markdown(
     """
 )
 if 'dataframe' not in st.session_state:
-    st.session_state.dataframe = []
+    st.session_state.dataframe = pd.DataFrame({'x':[] , 'y': []})
     st.session_state.datalines = []
     st.session_state.c = 0
     st.session_state.minmax = [-10,10]

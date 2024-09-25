@@ -30,10 +30,6 @@ st.markdown(
     - Upload Lines recibe un archivo CSV que contiene las coordenadas de los puntos que forman las líneas y 
     grafica en el plano dichas lineas y su solución.
     </div>
-    
-        <div style="text-align: justify;">
-    - Upload Lines recibe un archivo CSV que contiene las coordenadas de los puntos que forman las líneas y 
-    grafica en el plano dichas lineas y su solución.
-    </div>
+
 """, unsafe_allow_html=True
 )
