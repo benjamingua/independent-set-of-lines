@@ -54,7 +54,8 @@ with st.container(border=True):
         fig, ax = plt.subplots()
         for i in range(0, len(x), 2):
             plt.plot(x[i:i+2], y[i:i+2], 'o-')
-            plt.annotate( 'L'+str(i//2), PuntoMedio(x[i:i+2], y[i:i+2]), color='blue' )
+            if c<=20:
+                plt.annotate( 'L'+str(i//2), PuntoMedio(x[i:i+2], y[i:i+2]), color='blue' )
 
         plt.axhline(0,color='black')
         plt.axvline(0,color='black')
