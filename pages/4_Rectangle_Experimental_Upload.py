@@ -9,8 +9,8 @@ def PuntoMedio(x,y):
     else:
         return (x[0]+x[1])/2-0.4, (y[0]+y[1])/2+0.3
 
-st.markdown("# Upload Model")
-st.sidebar.header("Upload Model")
+st.markdown("# Rectangle Experimental Upload")
+st.sidebar.header("Rectangle Experimental Upload")
 st.markdown(
     """
     **Instructions:** 
@@ -28,18 +28,16 @@ with st.container(border=True):
         dataframe = pd.read_csv(uploaded_file,sep=separator)
         st.write("Dataframe preview")
         st.dataframe(dataframe,hide_index=True,use_container_width=True)
-        c = len(dataframe.index)//2
 
     if st.button("Let's graph"):
-        try:
+#        try:
             fig, ax = plt.subplots()
             plt.axhline(0,color='black')
             plt.axvline(0,color='black')
-            for i in range(0, len(dataframe["x"]), 2):
-                plt.plot(dataframe["x"][i:i+2], dataframe["y"][i:i+2], 'o-')
-                if c<=20:
-                    plt.annotate( 'L'+str(i//2), PuntoMedio(list(dataframe["x"][i:i+2]), list(dataframe["y"][i:i+2])), color='blue' )
-
+            for i in range(0, len(dataframe["x"]), 4):
+                graph = dataframe.iloc[i:i+4]
+                graph = pd.concat([graph,dataframe.iloc[i:i+1]], ignore_index=True)
+                plt.plot(graph["x"],graph["y"], 'o-')
 
 
             plt.minorticks_on()
@@ -47,6 +45,6 @@ with st.container(border=True):
             plt.grid( True, 'major', markevery=10 )
             plt.title('Upload Lines Problem')
             st.pyplot(fig)
-        except:
-            st.error('No file uploaded or the file is not in the correct format', icon="🚨")
+#        except:
+#            st.error('No file uploaded or the file is not in the correct format', icon="🚨")
 
