@@ -99,11 +99,10 @@ with st.container(border=True):
                 else:
                     xoy.append("y")
         for i in range(0,st.session_state.c):
-            if st.session_state.c<=20:
-                lines.append("L"+str(i))
-                lineslist.append("L"+str(i))
-                lineslist.append("L"+str(i))
-                check_lines.append(True)
+            lines.append("L"+str(i))
+            lineslist.append("L"+str(i))
+            lineslist.append("L"+str(i))
+            check_lines.append(True)
             temporal = random.choice(rangoxy)
             initial_point = random.choice(possible)
             temporal_range = rangominmax(initial_point,rangoxy,minmax)
@@ -158,12 +157,18 @@ with st.container():
         plt.grid( True, 'major', markevery=10 )
         plt.title('Randomly Generated Lines Problem')
         col1.pyplot(fig)
+        Line_1=[]
+        Line_2=[]
+        Intersection =[]
         for i in range(0,len(st.session_state.dataframe["x"]),2):
             for j in range(i+2,len(st.session_state.dataframe["x"]),2):
                 l1x = list(st.session_state.dataframe["x"][i:i+2])
                 l1y = list(st.session_state.dataframe["y"][i:i+2])
                 l2x = list(st.session_state.dataframe["x"][j:j+2])
                 l2y = list(st.session_state.dataframe["y"][j:j+2])
-                st.write("L"+str(i//2)+" se intersecta con L"+str(j//2))
-                st.write(se_intersectan(l1x,l1y,l2x,l2y))
+                Line_1.append("L"+str(i//2))
+                Line_2.append("L"+str(j//2))
+                Intersection.append(se_intersectan(l1x,l1y,l2x,l2y))
+        intersecciones = pd.DataFrame({'Line 1':Line_1 , 'Line 2': Line_2, "Intersection":Intersection})        
+        st.dataframe(intersecciones,hide_index=True,use_container_width=True)
 
