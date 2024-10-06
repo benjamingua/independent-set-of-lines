@@ -27,6 +27,24 @@ def calcular_porcentaje(percent, total):
     porcentaje = (percent * total) // 100
     return porcentaje
 
+
+def se_intersectan(l1x,l1y,l2x,l2y):
+    if (l1x[0]==l1x[1]) and (l2x[0] == l2x[1]):
+        if l1x[0]==l2x[0]:
+            return (l1y[1]>l2y[0]) and (l1y[0]<l2y[1])
+        else:
+            return False
+    if (l1y[0] == l2y[0]) and (l2y[0] == l2y[1]):
+        if l1y[0]==l2y[0]:
+            return (l1x[1]>l2x[0]) and (l1x[0]<l2x[1])
+        else:
+            return False
+    if l1y[0] == l1y[1]:
+        return (l2y[0]<l1y[0]<l2y[1]) and (l1x[0]<l2x[0]<l1x[1])
+    else:
+        return (l2x[0]<l1x[0]<l2x[1]) and (l1y[0]<l2y[0]<l1y[1]) 
+
+st. set_page_config(layout="wide")
 st.markdown("# Random Lines")
 st.sidebar.header("Random Lines")
 st.markdown(
@@ -69,6 +87,7 @@ with st.container(border=True):
         y=[]
         xoy=[]
         lines = []
+        lineslist =[]
         check_lines =[]
         if not checkbox:
             for i in range(st.session_state.c):
@@ -82,6 +101,8 @@ with st.container(border=True):
         for i in range(0,st.session_state.c):
             if st.session_state.c<=20:
                 lines.append("L"+str(i))
+                lineslist.append("L"+str(i))
+                lineslist.append("L"+str(i))
                 check_lines.append(True)
             temporal = random.choice(rangoxy)
             initial_point = random.choice(possible)
@@ -89,14 +110,24 @@ with st.container(border=True):
             if xoy[i] ==  "x":
                 x.append(temporal)
                 x.append(temporal)
-                y.append(initial_point)
-                y.append(random.choice(temporal_range))
-            else:            
-                x.append(initial_point)
-                x.append(random.choice(temporal_range))
+                point = random.choice(temporal_range)
+                if point>=initial_point:
+                    y.append(initial_point)
+                    y.append(point)
+                else:
+                    y.append(point)
+                    y.append(initial_point)
+            else:  
+                point = random.choice(temporal_range)     
+                if point >= initial_point:
+                    x.append(initial_point)
+                    x.append(point)
+                else:
+                    x.append(point)
+                    x.append(initial_point)
                 y.append(temporal)
                 y.append(temporal)
-        st.session_state.dataframe = pd.DataFrame(list(zip(x, y)),columns =['x', 'y'])
+        st.session_state.dataframe = pd.DataFrame(list(zip(lineslist,x, y)),columns =["Lines",'x', 'y'])
         st.session_state.datalines = pd.DataFrame(list(zip(lines, check_lines)),columns =['Lines', 'CheckBox'])
         st.session_state.minmax = values
 
@@ -120,10 +151,19 @@ with st.container():
             elif st.session_state.c> 20:
                 plt.plot(st.session_state.dataframe["x"][i:i+2], st.session_state.dataframe["y"][i:i+2], 'o-')
 
-        plt.xlim(st.session_state.minmax[0], st.session_state.minmax[1])
-        plt.ylim(st.session_state.minmax[0], st.session_state.minmax[1]) 
+        plt.xlim(st.session_state.minmax[0]-2, st.session_state.minmax[1]+2)
+        plt.ylim(st.session_state.minmax[0]-2, st.session_state.minmax[1]+2) 
         plt.minorticks_on()
         plt.grid( True, 'minor', markevery=2, linestyle='--' )
         plt.grid( True, 'major', markevery=10 )
         plt.title('Randomly Generated Lines Problem')
         col1.pyplot(fig)
+        for i in range(0,len(st.session_state.dataframe["x"]),2):
+            for j in range(i+2,len(st.session_state.dataframe["x"]),2):
+                l1x = list(st.session_state.dataframe["x"][i:i+2])
+                l1y = list(st.session_state.dataframe["y"][i:i+2])
+                l2x = list(st.session_state.dataframe["x"][j:j+2])
+                l2y = list(st.session_state.dataframe["y"][j:j+2])
+                st.write("L"+str(i//2)+" se intersecta con L"+str(j//2))
+                st.write(se_intersectan(l1x,l1y,l2x,l2y))
+
