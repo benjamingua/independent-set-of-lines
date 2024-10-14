@@ -3,6 +3,7 @@ import numpy as np
 import random
 import streamlit as st
 import pandas as pd
+import itertools
 
 def PuntoMedio(x,y):
     if x[0]==x[1]:
@@ -44,6 +45,19 @@ def se_intersectan(l1x,l1y,l2x,l2y):
     else:
         return (l2x[0]<l1x[0]<l2x[1]) and (l1y[0]<l2y[0]<l1y[1]) 
 
+def subconjuntos(lista_lineas):
+    sub =[]
+    for i in range(len(lista_lineas)+1):
+        sub+= list(itertools.combinations(lista_lineas,i))
+    return sub
+
+
+def alg_d1x(lineas):
+    lineas_l = lineas[::2]
+    lineas_r = lineas[1::2]
+    return
+
+    
 st. set_page_config(layout="wide")
 st.markdown("# Random Lines")
 st.sidebar.header("Random Lines")
@@ -65,6 +79,7 @@ if 'dataframe' not in st.session_state:
     st.session_state.datalines = []
     st.session_state.c = 0
     st.session_state.minmax = [-10,10]
+    st.session_state.lines = []
 
 
 with st.container(border=True):
@@ -126,6 +141,7 @@ with st.container(border=True):
                     x.append(initial_point)
                 y.append(temporal)
                 y.append(temporal)
+        st.session_state.lines = list(lines)
         st.session_state.dataframe = pd.DataFrame(list(zip(lineslist,x, y)),columns =["Lines",'x', 'y'])
         st.session_state.datalines = pd.DataFrame(list(zip(lines, check_lines)),columns =['Lines', 'CheckBox'])
         st.session_state.minmax = values
@@ -166,9 +182,48 @@ with st.container():
                 l1y = list(st.session_state.dataframe["y"][i:i+2])
                 l2x = list(st.session_state.dataframe["x"][j:j+2])
                 l2y = list(st.session_state.dataframe["y"][j:j+2])
-                Line_1.append("L"+str(i//2))
-                Line_2.append("L"+str(j//2))
-                Intersection.append(se_intersectan(l1x,l1y,l2x,l2y))
+                if se_intersectan(l1x,l1y,l2x,l2y):
+                    Line_1.append("L"+str(i//2))
+                    Line_2.append("L"+str(j//2))
+                    Intersection.append(se_intersectan(l1x,l1y,l2x,l2y))
         intersecciones = pd.DataFrame({'Line 1':Line_1 , 'Line 2': Line_2, "Intersection":Intersection})        
         st.dataframe(intersecciones,hide_index=True,use_container_width=True)
+        if st.button("Generar Solucion"):
+            st.session_state.conjuntos = subconjuntos(st.session_state.lines)
+            st.write("La cantidad de subconjuntos es:" + str(len(st.session_state.conjuntos)))
+        
+            conjunto_max = []
+            tamaño_max = 0       
+            for i in range(len(st.session_state.conjuntos)):
+                es_solucion = True
+                if len(st.session_state.conjuntos[i])<2:
+                    conjunto_max = st.session_state.conjuntos[i]
+                    tamaño_max = len(st.session_state.conjuntos[i])
+                    continue
+                for j in range(len(Line_1)):
+                    if Line_1[j] in st.session_state.conjuntos[i] and Line_2[j] in st.session_state.conjuntos[i]:
+                        es_solucion = False
+                        break
+                if es_solucion:
+                    conjunto_max = st.session_state.conjuntos[i]
+                    tamaño_max = len(st.session_state.conjuntos[i])
 
+            st.write("El conjunto máximo es: ", conjunto_max)
+            st.write("De tamaño "+ str(tamaño_max))
+
+            fig2, ax = plt.subplots()
+            plt.axhline(0,color='black')
+            plt.axvline(0,color='black')
+            for i in range(0, len(st.session_state.dataframe["x"]), 2):
+                if st.session_state.dataframe["Lines"][i] in conjunto_max:  
+                    plt.plot(st.session_state.dataframe["x"][i:i+2], st.session_state.dataframe["y"][i:i+2], 'o-')
+                    plt.annotate( 'L'+str(i//2), PuntoMedio(list(st.session_state.dataframe["x"][i:i+2]), list(st.session_state.dataframe["y"][i:i+2])), color='blue' )
+  
+            plt.xlim(st.session_state.minmax[0]-2, st.session_state.minmax[1]+2)
+            plt.ylim(st.session_state.minmax[0]-2, st.session_state.minmax[1]+2) 
+            plt.minorticks_on()
+            plt.grid( True, 'minor', markevery=2, linestyle='--' )
+            plt.grid( True, 'major', markevery=10 )
+            plt.title('Randomly Generated Lines Problem Solution')
+            st.pyplot(fig2)
+        
