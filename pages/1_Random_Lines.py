@@ -45,6 +45,12 @@ def se_intersectan(l1x,l1y,l2x,l2y):
     else:
         return (l2x[0]<l1x[0]<l2x[1]) and (l1y[0]<l2y[0]<l1y[1]) 
 
+def se_intersectan2(l1,l2):
+    if (l1['x0']==l1['x1']) and (l2['x0']==l2['x1']):
+        if l1['x0']==l2['x0']:
+            return (l1['y1']>l2['y0']) and (l1['y0']<l2['y1'])
+
+
 def subconjuntos(lista_lineas):
     sub =[]
     for i in range(len(lista_lineas)+1):
@@ -52,12 +58,44 @@ def subconjuntos(lista_lineas):
     return sub
 
 
-def alg_d1x(lineas):
-    lineas_l = lineas[::2]
-    lineas_r = lineas[1::2]
-    return
+def solutions_subsets_H(sub):
+    sub_sorted = sub.sort_values(by='x1', ascending=True).reset_index(drop=True)
+    sub_solution = pd.DataFrame({'x0':[] , 'y0': [],'x1':[],'y1':[]})
+    for i in range(len(sub_sorted)):
+        if i == 0:
+            sub_solution = pd.concat([sub_solution, sub_sorted.iloc[[0]]], ignore_index=True)
+        else:
+            actual_solution = sub_solution.iloc[-1]
 
-    
+            l1x = [actual_solution['x0'], actual_solution['x1']]
+            l1y = [actual_solution['y0'], actual_solution['y1']]
+
+            l2x = [sub_sorted['x0'][i], sub_sorted['x1'][i]]
+            l2y = [sub_sorted['y0'][i], sub_sorted['y1'][i]]
+
+            if not se_intersectan(l1x,l1y,l2x,l2y):
+                sub_solution = pd.concat([sub_solution, sub_sorted.iloc[[i]]])
+    return sub_solution
+
+def solutions_subsets_V(sub):
+    sub_sorted = sub.sort_values(by='y1', ascending=True).reset_index(drop=True)
+    sub_solution = pd.DataFrame({'x0':[] , 'y0': [],'x1':[],'y1':[]})
+    for i in range(len(sub_sorted)):
+        if i == 0:
+            sub_solution = pd.concat([sub_solution, sub_sorted.iloc[[0]]], ignore_index=True)
+        else:
+            actual_solution = sub_solution.iloc[-1]
+
+            l1x = [actual_solution['x0'], actual_solution['x1']]
+            l1y = [actual_solution['y0'], actual_solution['y1']]
+
+            l2x = [sub_sorted['x0'][i], sub_sorted['x1'][i]]
+            l2y = [sub_sorted['y0'][i], sub_sorted['y1'][i]]
+
+            if not se_intersectan(l1x,l1y,l2x,l2y):
+                sub_solution = pd.concat([sub_solution, sub_sorted.iloc[[i]]])
+    return sub_solution
+
 st. set_page_config(layout="wide")
 st.markdown("# Random Lines")
 st.sidebar.header("Random Lines")
@@ -80,6 +118,7 @@ if 'dataframe' not in st.session_state:
     st.session_state.c = 0
     st.session_state.minmax = [-10,10]
     st.session_state.lines = []
+    st.session_state.disabled = False
 
 
 with st.container(border=True):
@@ -163,7 +202,9 @@ with st.container():
             if st.session_state.c<=20 and edited["CheckBox"][i//2]:               
                 plt.plot(st.session_state.dataframe["x"][i:i+2], st.session_state.dataframe["y"][i:i+2], 'o-')
                 plt.annotate( 'L'+str(i//2), PuntoMedio(list(st.session_state.dataframe["x"][i:i+2]), list(st.session_state.dataframe["y"][i:i+2])), color='blue' )
+                st.session_state.disabled = False
             elif st.session_state.c> 20:
+                st.session_state.disabled = True
                 plt.plot(st.session_state.dataframe["x"][i:i+2], st.session_state.dataframe["y"][i:i+2], 'o-')
 
         plt.xlim(st.session_state.minmax[0]-2, st.session_state.minmax[1]+2)
@@ -186,14 +227,28 @@ with st.container():
                     Line_1.append("L"+str(i//2))
                     Line_2.append("L"+str(j//2))
                     Intersection.append(se_intersectan(l1x,l1y,l2x,l2y))
-        intersecciones = pd.DataFrame({'Line 1':Line_1 , 'Line 2': Line_2, "Intersection":Intersection})        
+        intersecciones = pd.DataFrame({'Line 1':Line_1 , 'Line 2': Line_2, "Intersection":Intersection})  
+        st.write("Dataframe Intersecciones")      
         st.dataframe(intersecciones,hide_index=True,use_container_width=True)
-        if st.button("Generar Solucion"):
+        col1, col2,col3 = st.columns(3)
+        with col1:
+            button_brute = st.button("Generar Solucion Fuerza Bruta", disabled=st.session_state.disabled)
+
+        with col2:
+            button_2aprox = st.button("Generar Solucion 2-aprox")
+
+        with col3:
+            button_lineal = st.button("Generar Solucion lineal")
+        
+        
+        
+        if button_brute:
             st.session_state.conjuntos = subconjuntos(st.session_state.lines)
             st.write("La cantidad de subconjuntos es:" + str(len(st.session_state.conjuntos)))
         
             conjunto_max = []
-            tamaño_max = 0       
+            tamaño_max = 0 
+            num_optimas = 0      
             for i in range(len(st.session_state.conjuntos)):
                 es_solucion = True
                 if len(st.session_state.conjuntos[i])<2:
@@ -205,9 +260,14 @@ with st.container():
                         es_solucion = False
                         break
                 if es_solucion:
+                    if tamaño_max == len(st.session_state.conjuntos[i]):
+                        num_optimas+=1
+                        continue
                     conjunto_max = st.session_state.conjuntos[i]
                     tamaño_max = len(st.session_state.conjuntos[i])
-
+                    num_optimas=1
+                    
+            st.write("Existen "+str(num_optimas)+" soluciones optimas")
             st.write("El conjunto máximo es: ", conjunto_max)
             st.write("De tamaño "+ str(tamaño_max))
 
@@ -224,6 +284,62 @@ with st.container():
             plt.minorticks_on()
             plt.grid( True, 'minor', markevery=2, linestyle='--' )
             plt.grid( True, 'major', markevery=10 )
-            plt.title('Randomly Generated Lines Problem Solution')
+            plt.title('Randomly Generated Lines Problem Solution Brute Force')
             st.pyplot(fig2)
         
+        if button_2aprox:
+            st.write("2-aprox")
+            Line_H = pd.DataFrame({'x0':[] , 'y0': [],'x1':[],'y1':[]})
+            Line_V = pd.DataFrame({'x0':[] , 'y0': [],'x1':[],'y1':[]})
+            for i in range(0,len(st.session_state.dataframe["x"]),2):
+                
+                if st.session_state.dataframe["x"][i]==st.session_state.dataframe["x"][i+1]:
+                    Line_V.loc[len(Line_V)] = [st.session_state.dataframe["x"][i], st.session_state.dataframe["y"][i], st.session_state.dataframe["x"][i+1], st.session_state.dataframe["y"][i+1]]
+                else:
+                    Line_H.loc[len(Line_H)] = [st.session_state.dataframe["x"][i], st.session_state.dataframe["y"][i], st.session_state.dataframe["x"][i+1], st.session_state.dataframe["y"][i+1]]
+
+            # Crear un diccionario para almacenar los subconjuntos
+            subsetsH = {}
+            subsetsV = {}
+            solution_H = pd.DataFrame({'x0':[] , 'y0': [],'x1':[],'y1':[]})
+            solution_V = pd.DataFrame({'x0':[] , 'y0': [],'x1':[],'y1':[]})
+            # Recorrer los grupos
+            for y0_value, group in Line_H.groupby('y0'):
+                if len(group) > 1:  # Verificar si el grupo tiene más de 1 fila
+                    subsetsH[y0_value] = group
+                else:
+                    solution_H = pd.concat([solution_H, group])
+
+            for y0_value, group in Line_V.groupby('x0'):
+                if len(group) > 1:  # Verificar si el grupo tiene más de 1 fila
+                    subsetsV[y0_value] = group
+                else:
+                    solution_V = pd.concat([solution_V, group])
+
+            for item in subsetsH:
+                solution_H = pd.concat([solution_H, solutions_subsets_H(subsetsH[item])]) 
+            for item in subsetsV:
+                solution_V = pd.concat([solution_V, solutions_subsets_V(subsetsV[item])]) 
+
+            
+            if len(solution_V)>len(solution_H):
+                final = solution_V.reset_index(drop=True) 
+            else:
+                final = solution_H.reset_index(drop=True) 
+            st.write("Tamaño Solucion: "+ str(len(final)))
+            st.dataframe(final)
+            fig3, ax = plt.subplots()
+            plt.axhline(0,color='black')
+            plt.axvline(0,color='black')
+            for i in range(0, len(final["x0"])):
+                
+                plt.plot([final["x0"][i],final['x1'][i]], [final["y0"][i],final['y1'][i]], 'o-')
+
+  
+            plt.xlim(st.session_state.minmax[0]-2, st.session_state.minmax[1]+2)
+            plt.ylim(st.session_state.minmax[0]-2, st.session_state.minmax[1]+2) 
+            plt.minorticks_on()
+            plt.grid( True, 'minor', markevery=2, linestyle='--' )
+            plt.grid( True, 'major', markevery=10 )
+            plt.title('Randomly Generated Lines Problem Solution 2-APROX')
+            st.pyplot(fig3)
