@@ -4,6 +4,7 @@ import random
 import streamlit as st
 import pandas as pd
 import itertools
+import pulp as p
 
 def PuntoMedio(x,y):
     if x[0]==x[1]:
@@ -343,3 +344,48 @@ with st.container():
             plt.grid( True, 'major', markevery=10 )
             plt.title('Randomly Generated Lines Problem Solution 2-APROX')
             st.pyplot(fig3)
+
+        if button_lineal:
+            modelo = p.LpProblem('Lineal_Solution', p.LpMaximize)
+
+            X = p.LpVariable.dicts("Linea", st.session_state.lines, lowBound=0, upBound=1, cat=p.LpInteger)
+            modelo += p.lpSum(X[linea] for linea in st.session_state.lines)
+            for i in range(0,len(st.session_state.dataframe["x"]),2):
+                Li = st.session_state.dataframe["Lines"][i]
+                for j in range(i+2,len(st.session_state.dataframe["x"]),2):
+                    Lj = st.session_state.dataframe["Lines"][j]
+                    l1x = list(st.session_state.dataframe["x"][i:i+2])
+                    l1y = list(st.session_state.dataframe["y"][i:i+2])
+                    l2x = list(st.session_state.dataframe["x"][j:j+2])
+                    l2y = list(st.session_state.dataframe["y"][j:j+2])
+                    if se_intersectan(l1x,l1y,l2x,l2y):
+                        modelo += X[Li] + X[Lj] <= 1, 'Restriccion de Intereseccion '+Li+'_'+Lj
+            solucion = modelo.solve()
+            st.write("Tamaño Máximo de la Solucion: ",str(int(p.value(modelo.objective))))
+            lista_solucion =[]
+            lista_name =[]
+            for v in modelo.variables():
+                lista_solucion.append(int(v.varValue))
+                lista_name.append(v.name.replace("Linea_",""))
+            final_solution =pd.DataFrame(list(zip(lista_name, lista_solucion)),columns =['Lines', 'Solution'])
+            st.dataframe(final_solution)
+            fig4, ax = plt.subplots()
+            plt.axhline(0,color='black')
+            plt.axvline(0,color='black')
+            for i in range(0, len(st.session_state.dataframe["x"]), 2):
+                Li = st.session_state.dataframe["Lines"][i]
+                value = final_solution.loc[final_solution['Lines'] == Li, 'Solution'].values[0]
+                if value == 1:  
+                    plt.plot(st.session_state.dataframe["x"][i:i+2], st.session_state.dataframe["y"][i:i+2], 'o-')
+                    #plt.annotate( 'L'+str(i//2), PuntoMedio(list(st.session_state.dataframe["x"][i:i+2]), list(st.session_state.dataframe["y"][i:i+2])), color='blue' )
+            plt.xlim(st.session_state.minmax[0]-2, st.session_state.minmax[1]+2)
+            plt.ylim(st.session_state.minmax[0]-2, st.session_state.minmax[1]+2) 
+            plt.minorticks_on()
+            plt.grid( True, 'minor', markevery=2, linestyle='--' )
+            plt.grid( True, 'major', markevery=10 )
+            plt.title('Randomly Generated Lines Problem Solution Lineal Solution')
+            st.pyplot(fig4)
+            #st.write(modelo) 
+
+
+
