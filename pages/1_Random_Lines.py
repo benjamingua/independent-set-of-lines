@@ -215,22 +215,38 @@ with st.container():
         plt.grid( True, 'major', markevery=10 )
         plt.title('Randomly Generated Lines Problem')
         col1.pyplot(fig)
-        Line_1=[]
-        Line_2=[]
-        Intersection =[]
-        for i in range(0,len(st.session_state.dataframe["x"]),2):
-            for j in range(i+2,len(st.session_state.dataframe["x"]),2):
-                l1x = list(st.session_state.dataframe["x"][i:i+2])
-                l1y = list(st.session_state.dataframe["y"][i:i+2])
-                l2x = list(st.session_state.dataframe["x"][j:j+2])
-                l2y = list(st.session_state.dataframe["y"][j:j+2])
-                if se_intersectan(l1x,l1y,l2x,l2y):
-                    Line_1.append("L"+str(i//2))
-                    Line_2.append("L"+str(j//2))
-                    Intersection.append(se_intersectan(l1x,l1y,l2x,l2y))
-        intersecciones = pd.DataFrame({'Line 1':Line_1 , 'Line 2': Line_2, "Intersection":Intersection})  
+        Line_1p=[]
+        Line_2p=[]
+        Intersectionp =[]
+        if st.session_state.c<=20:
+            for i in range(0,len(st.session_state.dataframe["x"]),2):
+                if edited["CheckBox"][i//2]:    
+                    for j in range(i+2,len(st.session_state.dataframe["x"]),2):
+                        if edited["CheckBox"][j//2]:
+                            l1x = list(st.session_state.dataframe["x"][i:i+2])
+                            l1y = list(st.session_state.dataframe["y"][i:i+2])
+                            l2x = list(st.session_state.dataframe["x"][j:j+2])
+                            l2y = list(st.session_state.dataframe["y"][j:j+2])
+                            if se_intersectan(l1x,l1y,l2x,l2y):
+                                Line_1p.append("L"+str(i//2))
+                                Line_2p.append("L"+str(j//2))
+                                Intersectionp.append(se_intersectan(l1x,l1y,l2x,l2y))
+        else:
+            for i in range(0,len(st.session_state.dataframe["x"]),2):
+                for j in range(i+2,len(st.session_state.dataframe["x"]),2):
+                    l1x = list(st.session_state.dataframe["x"][i:i+2])
+                    l1y = list(st.session_state.dataframe["y"][i:i+2])
+                    l2x = list(st.session_state.dataframe["x"][j:j+2])
+                    l2y = list(st.session_state.dataframe["y"][j:j+2])
+                    if se_intersectan(l1x,l1y,l2x,l2y):
+                        Line_1p.append("L"+str(i//2))
+                        Line_2p.append("L"+str(j//2))
+                        Intersectionp.append(se_intersectan(l1x,l1y,l2x,l2y))
+
+        intersecciones = pd.DataFrame({'Line 1':Line_1p , 'Line 2': Line_2p, "Intersection":Intersectionp})  
         st.write("Dataframe Intersecciones")      
         st.dataframe(intersecciones,hide_index=True,use_container_width=True)
+
         col1, col2,col3 = st.columns(3)
         with col1:
             button_brute = st.button("Generar Solucion Fuerza Bruta", disabled=st.session_state.disabled)
@@ -246,7 +262,19 @@ with st.container():
         if button_brute:
             st.session_state.conjuntos = subconjuntos(st.session_state.lines)
             st.write("La cantidad de subconjuntos es:" + str(len(st.session_state.conjuntos)))
-        
+            Line_1=[]
+            Line_2=[]
+            Intersection =[]
+            for i in range(0,len(st.session_state.dataframe["x"]),2):
+                for j in range(i+2,len(st.session_state.dataframe["x"]),2):
+                    l1x = list(st.session_state.dataframe["x"][i:i+2])
+                    l1y = list(st.session_state.dataframe["y"][i:i+2])
+                    l2x = list(st.session_state.dataframe["x"][j:j+2])
+                    l2y = list(st.session_state.dataframe["y"][j:j+2])
+                    if se_intersectan(l1x,l1y,l2x,l2y):
+                        Line_1.append("L"+str(i//2))
+                        Line_2.append("L"+str(j//2))
+                        Intersection.append(se_intersectan(l1x,l1y,l2x,l2y))
             conjunto_max = []
             tamaño_max = 0 
             num_optimas = 0      
@@ -290,6 +318,23 @@ with st.container():
         
         if button_2aprox:
             st.write("2-aprox")
+            modelo = p.LpProblem('Lineal_Solution', p.LpMaximize)
+
+            X = p.LpVariable.dicts("Linea", st.session_state.lines, lowBound=0, upBound=1, cat=p.LpInteger)
+            modelo += p.lpSum(X[linea] for linea in st.session_state.lines)
+            for i in range(0,len(st.session_state.dataframe["x"]),2):
+                Li = st.session_state.dataframe["Lines"][i]
+                for j in range(i+2,len(st.session_state.dataframe["x"]),2):
+                    Lj = st.session_state.dataframe["Lines"][j]
+                    l1x = list(st.session_state.dataframe["x"][i:i+2])
+                    l1y = list(st.session_state.dataframe["y"][i:i+2])
+                    l2x = list(st.session_state.dataframe["x"][j:j+2])
+                    l2y = list(st.session_state.dataframe["y"][j:j+2])
+                    if se_intersectan(l1x,l1y,l2x,l2y):
+                        modelo += X[Li] + X[Lj] <= 1, 'Restriccion de Intereseccion '+Li+'_'+Lj
+            solucion = modelo.solve()
+            st.write("Tamaño Máximo de la Solucion Por Programacion Lineal: ",str(int(p.value(modelo.objective))))
+
             Line_H = pd.DataFrame({'x0':[] , 'y0': [],'x1':[],'y1':[]})
             Line_V = pd.DataFrame({'x0':[] , 'y0': [],'x1':[],'y1':[]})
             for i in range(0,len(st.session_state.dataframe["x"]),2):
@@ -327,7 +372,7 @@ with st.container():
                 final = solution_V.reset_index(drop=True) 
             else:
                 final = solution_H.reset_index(drop=True) 
-            st.write("Tamaño Solucion: "+ str(len(final)))
+            st.write("Tamaño Solucion 2-APROX: "+ str(len(final)))
             st.dataframe(final)
             fig3, ax = plt.subplots()
             plt.axhline(0,color='black')
