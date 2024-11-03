@@ -242,8 +242,7 @@ try:
                 plt.plot(st.session_state.dataframeu["x"][i:i+2], st.session_state.dataframeu["y"][i:i+2], 'o-')
                 plt.annotate( 'L'+str(i//2), PuntoMedio(list(st.session_state.dataframeu["x"][i:i+2]), list(st.session_state.dataframeu["y"][i:i+2])), color='blue' )
 
-        plt.xlim(st.session_state.minmax[0]-2, st.session_state.minmax[1]+2)
-        plt.ylim(st.session_state.minmax[0]-2, st.session_state.minmax[1]+2) 
+
         plt.minorticks_on()
         plt.grid( True, 'minor', markevery=2, linestyle='--' )
         plt.grid( True, 'major', markevery=10 )
@@ -316,8 +315,7 @@ try:
             plt.plot([final["x0"][i],final['x1'][i]], [final["y0"][i],final['y1'][i]], 'o-')
 
 
-        plt.xlim(st.session_state.minmax[0]-2, st.session_state.minmax[1]+2)
-        plt.ylim(st.session_state.minmax[0]-2, st.session_state.minmax[1]+2) 
+
         plt.minorticks_on()
         plt.grid( True, 'minor', markevery=2, linestyle='--' )
         plt.grid( True, 'major', markevery=10 )
@@ -357,8 +355,7 @@ try:
             if value == 1:  
                 plt.plot(st.session_state.dataframeu["x"][i:i+2], st.session_state.dataframeu["y"][i:i+2], 'o-')
                 #plt.annotate( 'L'+str(i//2), PuntoMedio(list(st.session_state.dataframeu["x"][i:i+2]), list(st.session_state.dataframeu["y"][i:i+2])), color='blue' )
-        plt.xlim(st.session_state.minmax[0]-2, st.session_state.minmax[1]+2)
-        plt.ylim(st.session_state.minmax[0]-2, st.session_state.minmax[1]+2) 
+
         plt.minorticks_on()
         plt.grid( True, 'minor', markevery=2, linestyle='--' )
         plt.grid( True, 'major', markevery=10 )
