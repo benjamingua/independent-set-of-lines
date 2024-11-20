@@ -132,9 +132,9 @@ with st.container(border=True):
     checkbox = st.checkbox(" % of vertical and horizontal lines.",key="percent")
     if checkbox:
         parte = st.slider("% of Lines Vertical", 0, 100, step=10)
-        porcentaje = calcular_porcentaje(parte,st.session_state.c)
+        porcentaje = calcular_porcentaje(parte,c)
         st.write("Number of Vertical Lines: " + str(porcentaje))
-        st.write("Number of Horizontal Lines: "+ str(st.session_state.c-porcentaje))
+        st.write("Number of Horizontal Lines: "+ str(c-porcentaje))
 
     if st.button("Create Random Lines Set"):
         st.session_state.c = c

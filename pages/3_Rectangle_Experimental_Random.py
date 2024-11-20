@@ -110,15 +110,18 @@ st.markdown(
 
 if 'datarec' not in st.session_state:
     st.session_state.datarec = pd.DataFrame({'x':[] , 'y': []})
+    st.session_state.disabled = False
 
 
 with st.container(border=True):
     values = st.slider("Select a range of the axes (square cartesian axis)", -100.0, 100.0,(-20.0,20.0),step=0.5)
     dif = values[1]-values[0]
-    minmax = st.slider("Select the minimum and maximum size of the sides of the rectangle.)", 0.0, dif,(0.0,dif),step=0.5)
+    minmaxLenght = st.slider("Select the minimum and maximum size of the Lenght of the rectangle.", 0.0, dif,(0.0,dif),step=0.5)
+    minmaxWidth = st.slider("Select the minimum and maximum size of the Width of the rectangle.", 0.0, dif,(0.0,dif),step=0.5)
     rangoxy = np.arange(values[0],values[1]+0.5,0.5)
-    possible = viable_point(rangoxy,minmax)
-    c = st.slider("Number of Rectangles", 0, 20, 1)
+    possibleX = viable_point(rangoxy,minmaxLenght)
+    possibleY = viable_point(rangoxy,minmaxWidth)
+    c = st.slider("Number of Rectangles", 0, 1000, 1)
 
 
     if st.button("Let's graph"):
@@ -126,11 +129,11 @@ with st.container(border=True):
         y=[]
         r=[]
         for i in range(0,c):
-            temporal = random.choice(possible)
-            initial_point = random.choice(possible)
-            temporal_range = rangominmax(initial_point,rangoxy,minmax)
+            temporal = random.choice(possibleX)
+            initial_point = random.choice(possibleY)
+            temporal_range = rangominmax(initial_point,rangoxy,minmaxWidth)
             ran = random.choice(temporal_range)
-            temporal_range2 = rangominmax(temporal,rangoxy,minmax)
+            temporal_range2 = rangominmax(temporal,rangoxy,minmaxLenght)
             ran2 = random.choice(temporal_range2)
             #first point
             x.append(temporal)
@@ -151,114 +154,142 @@ with st.container(border=True):
 
 
         st.session_state.datarec = pd.DataFrame(list(zip(x, y, r)),columns =['x', 'y', 'rectangle'])
-    st.write("Dataframe preview")
-    st.dataframe(st.session_state.datarec,hide_index=True,use_container_width=True)
-    fig, ax = plt.subplots()
+        if c>=20:
+            st.session_state.disabled = True
+        else:
+            st.session_state.disabled = False
+st.write("Dataframe preview")
+st.dataframe(st.session_state.datarec,hide_index=True,use_container_width=True)
+
+fig, ax = plt.subplots()
+plt.axhline(0,color='black')
+plt.axvline(0,color='black')
+rectangles = dict()
+for i in range(0, len(st.session_state.datarec["x"]), 4):
+    graph = st.session_state.datarec.iloc[i:i+4].reset_index()
+    name = "R"+str(i//4)
+    rectangles[name] = order_rectangle(graph)
+    graph = pd.concat([graph,st.session_state.datarec.iloc[i:i+1]], ignore_index=True)
+    #color = np.random.rand(3,)  # RGB aleatorio entre 0 y 1
+    
+    # Rellenar el área del rectángulo con el color aleatorio
+    plt.fill(graph["x"], graph["y"], alpha=0.5)
+    
+    # Opcional: Dibujar los bordes del rectángulo
+    plt.plot(graph["x"], graph["y"], 'o-', color='black')
+
+
+plt.minorticks_on()
+plt.grid( True, 'minor', markevery=2, linestyle='--' )
+plt.grid( True, 'major', markevery=10 )
+plt.title('Random Rectangles Problem')
+st.pyplot(fig)
+lista =list(rectangles)
+
+
+
+col1, col2= st.columns(2)
+with col1:
+    button_brute = st.button("Generar Solucion Fuerza Bruta", disabled=st.session_state.disabled)
+
+with col2:
+    button_lineal = st.button("Generar Solucion Lineal")
+
+if button_brute:
+    conjuntos = subconjuntos(lista)
+    Rec_1=[]
+    Rec_2=[]
+    Intersection =[]
+    conjunto_max = []
+    tamaño_max = 0 
+    num_optimas = 0
+    for i in range(0,len(lista)):
+        for j in range(i+1, len(lista)):
+            rec1 = rectangles[lista[i]]
+            rec2 = rectangles[lista[j]]
+            if interseccion(rec1,rec2):
+                Rec_1.append(lista[i])
+                Rec_2.append(lista[j])
+                Intersection.append(True)
+
+            #st.write(lista[i],lista[j])
+            #st.write(interseccion(rec1,rec2)) 
+
+    for i in range(len(conjuntos)):
+        es_solucion = True
+        if len(conjuntos[i])<2:
+            conjunto_max = conjuntos[i]
+            tamaño_max = len(conjuntos[i])
+            continue
+        for j in range(len(Rec_1)):
+            if Rec_1[j] in conjuntos[i] and Rec_2[j] in conjuntos[i]:
+                es_solucion = False
+                break
+        if es_solucion:
+            if tamaño_max == len(conjuntos[i]):
+                num_optimas+=1
+                continue
+            conjunto_max = conjuntos[i]
+            tamaño_max = len(conjuntos[i])
+            num_optimas=1
+            
+    st.write("Existen "+str(num_optimas)+" soluciones optimas")
+    st.write("El conjunto máximo es: ", conjunto_max)
+    st.write("De tamaño "+ str(tamaño_max))
+
+    fig1, ax = plt.subplots()
     plt.axhline(0,color='black')
     plt.axvline(0,color='black')
     rectangles = dict()
     for i in range(0, len(st.session_state.datarec["x"]), 4):
-        graph = st.session_state.datarec.iloc[i:i+4].reset_index()
-        name = "R"+str(i//4)
-        rectangles[name] = order_rectangle(graph)
-        graph = pd.concat([graph,st.session_state.datarec.iloc[i:i+1]], ignore_index=True)
-        plt.plot(graph["x"],graph["y"], 'o-')
-
+        if st.session_state.datarec["rectangle"][i] in conjunto_max: 
+            graph = st.session_state.datarec.iloc[i:i+4].reset_index()
+            graph = pd.concat([graph,st.session_state.datarec.iloc[i:i+1]], ignore_index=True)
+            plt.plot(graph["x"],graph["y"], 'o-')
 
     plt.minorticks_on()
     plt.grid( True, 'minor', markevery=2, linestyle='--' )
     plt.grid( True, 'major', markevery=10 )
-    plt.title('Random Rectangles Problem')
-    st.pyplot(fig)
-    lista =list(rectangles)
-    st.write(lista)
-    
-
-    col1, col2= st.columns(2)
-    with col1:
-        button_brute = st.button("Generar Solucion Fuerza Bruta")
-
-    with col2:
-        button_lineal = st.button("Generar Solucion Lineal")
-
-    if button_brute:
-        conjuntos = subconjuntos(lista)
-        Rec_1=[]
-        Rec_2=[]
-        Intersection =[]
-        conjunto_max = []
-        tamaño_max = 0 
-        num_optimas = 0
-        for i in range(0,len(lista)):
-            for j in range(i+1, len(lista)):
-                rec1 = rectangles[lista[i]]
-                rec2 = rectangles[lista[j]]
-                if interseccion(rec1,rec2):
-                    Rec_1.append(lista[i])
-                    Rec_2.append(lista[j])
-                    Intersection.append(True)
-
-                #st.write(lista[i],lista[j])
-                #st.write(interseccion(rec1,rec2)) 
-
-        for i in range(len(conjuntos)):
-            es_solucion = True
-            if len(conjuntos[i])<2:
-                conjunto_max = conjuntos[i]
-                tamaño_max = len(conjuntos[i])
-                continue
-            for j in range(len(Rec_1)):
-                if Rec_1[j] in conjuntos[i] and Rec_2[j] in conjuntos[i]:
-                    es_solucion = False
-                    break
-            if es_solucion:
-                if tamaño_max == len(conjuntos[i]):
-                    num_optimas+=1
-                    continue
-                conjunto_max = conjuntos[i]
-                tamaño_max = len(conjuntos[i])
-                num_optimas=1
-                
-        st.write("Existen "+str(num_optimas)+" soluciones optimas")
-        st.write("El conjunto máximo es: ", conjunto_max)
-        st.write("De tamaño "+ str(tamaño_max))
-
-        fig1, ax = plt.subplots()
-        plt.axhline(0,color='black')
-        plt.axvline(0,color='black')
-        rectangles = dict()
-        for i in range(0, len(st.session_state.datarec["x"]), 4):
-            if st.session_state.datarec["rectangle"][i] in conjunto_max: 
-                graph = st.session_state.datarec.iloc[i:i+4].reset_index()
-                graph = pd.concat([graph,st.session_state.datarec.iloc[i:i+1]], ignore_index=True)
-                plt.plot(graph["x"],graph["y"], 'o-')
-
-        plt.minorticks_on()
-        plt.grid( True, 'minor', markevery=2, linestyle='--' )
-        plt.grid( True, 'major', markevery=10 )
-        plt.title('Random Rectangles Problem Brute Solution')
-        st.pyplot(fig1)
+    plt.title('Random Rectangles Problem Brute Solution')
+    st.pyplot(fig1)
 
 
 
-    if button_lineal:
-        modelo = p.LpProblem('Lineal_Solution', p.LpMaximize)
-        X = p.LpVariable.dicts("Rectangle", rectangles, lowBound=0, upBound=1, cat=p.LpInteger)
-        modelo += p.lpSum(X[rec] for rec in rectangles)
-        for i in range(0,len(lista)):
-            Li = lista[i]
-            for j in range(i+1, len(lista)):
-                Lj = lista[j]
-                rec1 = rectangles[lista[i]]
-                rec2 = rectangles[lista[j]]
-                if interseccion(rec1,rec2):
-                    modelo += X[Li] + X[Lj] <= 1, 'Restriccion de Intereseccion '+Li+'_'+Lj
-        solucion = modelo.solve()
-        st.write("Tamaño Máximo de la Solucion: ",str(int(p.value(modelo.objective))))
-        lista_solucion =[]
-        lista_name =[]
-        for v in modelo.variables():
-            lista_solucion.append(int(v.varValue))
-            lista_name.append(v.name.replace("Rectangle_",""))
-        final_solution =pd.DataFrame(list(zip(lista_name, lista_solucion)),columns =['Lines', 'Solution'])
-        st.dataframe(final_solution)
+if button_lineal:
+    modelo = p.LpProblem('Lineal_Solution', p.LpMaximize)
+    X = p.LpVariable.dicts("Rectangle", rectangles, lowBound=0, upBound=1, cat=p.LpInteger)
+    modelo += p.lpSum(X[rec] for rec in rectangles)
+    for i in range(0,len(lista)):
+        Li = lista[i]
+        for j in range(i+1, len(lista)):
+            Lj = lista[j]
+            rec1 = rectangles[lista[i]]
+            rec2 = rectangles[lista[j]]
+            if interseccion(rec1,rec2):
+                modelo += X[Li] + X[Lj] <= 1, 'Restriccion de Intereseccion '+Li+'_'+Lj
+    solucion = modelo.solve()
+    st.write("Tamaño Máximo de la Solucion: ",str(int(p.value(modelo.objective))))
+    lista_solucion =[]
+    lista_name =[]
+    for v in modelo.variables():
+        lista_solucion.append(int(v.varValue))
+        lista_name.append(v.name.replace("Rectangle_",""))
+    final_solution =pd.DataFrame(list(zip(lista_name, lista_solucion)),columns =['Rectangles', 'Solution'])
+    st.dataframe(final_solution)
+    fig2, ax = plt.subplots()
+    plt.axhline(0,color='black')
+    plt.axvline(0,color='black')
+    rectangles = dict()
+    for i in range(0, len(st.session_state.datarec["x"]), 4):
+        Li = st.session_state.datarec["rectangle"][i]
+        value = final_solution.loc[final_solution['Rectangles'] == Li, 'Solution'].values[0]
+        if value == 1:  
+            graph = st.session_state.datarec.iloc[i:i+4].reset_index()
+            graph = pd.concat([graph,st.session_state.datarec.iloc[i:i+1]], ignore_index=True)
+            plt.plot(graph["x"],graph["y"], 'o-')
+
+    plt.minorticks_on()
+    plt.grid( True, 'minor', markevery=2, linestyle='--' )
+    plt.grid( True, 'major', markevery=10 )
+    plt.title('Random Rectangles Problem Lineal Solution')
+    st.pyplot(fig2)
