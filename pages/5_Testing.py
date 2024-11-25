@@ -559,7 +559,7 @@ if button_comp:
             lista_solucion =[]
             lista_name =[]
             for v in modelo2.variables():
-                lista_solucion.append(int(v.varValue))
+                lista_solucion.append(float(v.varValue))
                 lista_name.append(v.name.replace("Linea_",""))
             final_solution =pd.DataFrame(list(zip(lista_name, lista_solucion)),columns =['Lines', 'Solution'])
             lista_solucion =[]
