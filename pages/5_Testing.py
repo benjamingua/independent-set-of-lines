@@ -553,8 +553,8 @@ if button_comp:
         ALG = int(p.value(modelo2.objective))
 
 
-        if worst<OPT/ALG:
-            worst = OPT/ALG
+        if worst<ALG/OPT:
+            worst = ALG/OPT
             st.session_state.datacomp = st.session_state.datatest
             lista_solucion =[]
             lista_name =[]
