@@ -281,6 +281,7 @@ if time_test:
     tiempo_brute = []
     
     for l in range(1,100):
+        st.write("Iteracion:",l)
         st.session_state.ctest = l
         x=[]
         y=[]
