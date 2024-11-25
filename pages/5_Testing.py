@@ -105,6 +105,7 @@ st.sidebar.header("Experimental Enviroment")
 if 'datatest' not in st.session_state:
     st.session_state.datatest = pd.DataFrame({'x':[] , 'y': []})
     st.session_state.dataworst = pd.DataFrame({'x':[] , 'y': []})
+    st.session_state.datacomp = pd.DataFrame({'x':[] , 'y': []})
     st.session_state.datalinestest = []
     st.session_state.ctest = 0
     st.session_state.minmaxtest = [-10,10]
@@ -125,7 +126,20 @@ with st.container(border=True):
         st.write("Number of Vertical Lines: " + str(porcentaje))
         st.write("Number of Horizontal Lines: "+ str(c-porcentaje))
 
-if st.button("Worst Case in 100 random cases"):
+col1, col2,col3,col4 = st.columns(4)
+with col1:
+    worst_case = st.button("Worst Case in 100 random cases")
+
+with col2:
+    time_test = st.button("Time experiment brute force")
+
+with col3:
+    button_lineal = st.button("Time experiment lineal solution", disabled=True)
+
+with col4:
+    button_comp = st.button("Comparacion Entera/Fraccionaria")    
+
+if worst_case:
     worst = 1
     st.write("Comparacion OPT / 2-aprox")
     inicio_total = time.time()
@@ -261,3 +275,317 @@ if st.button("Worst Case in 100 random cases"):
     plt.title('Randomly Generated Lines Problem Worst Value')
     st.pyplot(fig)
 
+if time_test:
+    st.write("Time Test")
+    # FUERZA BRUTA
+    tiempo_brute = []
+    
+    for l in range(1,100):
+        st.session_state.ctest = l
+        x=[]
+        y=[]
+        xoy=[]
+        lines = []
+        lineslist =[]
+        check_lines =[]
+        if not checkbox:
+            for i in range(st.session_state.ctest):
+                xoy.append(random.choice(["x","y"]))
+        else:
+            for i in range(st.session_state.ctest):
+                if len(xoy)<porcentaje:
+                    xoy.append("x")
+                else:
+                    xoy.append("y")
+        for i in range(0,st.session_state.ctest):
+            lines.append("L"+str(i))
+            lineslist.append("L"+str(i))
+            lineslist.append("L"+str(i))
+            check_lines.append(True)
+            temporal = random.choice(rangoxy)
+            initial_point = random.choice(possible)
+            temporal_range = rangominmax(initial_point,rangoxy,minmax)
+            if xoy[i] ==  "x":
+                x.append(temporal)
+                x.append(temporal)
+                point = random.choice(temporal_range)
+                if point>=initial_point:
+                    y.append(initial_point)
+                    y.append(point)
+                else:
+                    y.append(point)
+                    y.append(initial_point)
+            else:  
+                point = random.choice(temporal_range)     
+                if point >= initial_point:
+                    x.append(initial_point)
+                    x.append(point)
+                else:
+                    x.append(point)
+                    x.append(initial_point)
+                y.append(temporal)
+                y.append(temporal)
+        st.session_state.linestest = list(lines)
+        st.session_state.datatest = pd.DataFrame(list(zip(lineslist,x, y)),columns =["Lines",'x', 'y'])
+        st.session_state.datalinestest = pd.DataFrame(list(zip(lines, check_lines)),columns =['Lines', 'CheckBox'])
+        st.session_state.minmaxtest = values
+
+        tiempo_inicio = time.time()
+        conjuntos = subconjuntos(st.session_state.linestest)
+        Line_1=[]
+        Line_2=[]
+        Intersection =[]
+        for i in range(0,len(st.session_state.datatest["x"]),2):
+            for j in range(i+2,len(st.session_state.datatest["x"]),2):
+                l1x = list(st.session_state.datatest["x"][i:i+2])
+                l1y = list(st.session_state.datatest["y"][i:i+2])
+                l2x = list(st.session_state.datatest["x"][j:j+2])
+                l2y = list(st.session_state.datatest["y"][j:j+2])
+                if se_intersectan(l1x,l1y,l2x,l2y):
+                    Line_1.append("L"+str(i//2))
+                    Line_2.append("L"+str(j//2))
+                    Intersection.append(se_intersectan(l1x,l1y,l2x,l2y))
+        conjunto_max = []
+        tamaño_max = 0 
+        num_optimas = 0      
+        for i in range(len(conjuntos)):
+            es_solucion = True
+            if len(conjuntos[i])<2:
+                conjunto_max = conjuntos[i]
+                tamaño_max = len(conjuntos[i])
+                continue
+            for j in range(len(Line_1)):
+                if Line_1[j] in conjuntos[i] and Line_2[j] in conjuntos[i]:
+                    es_solucion = False
+                    break
+            if es_solucion:
+                if tamaño_max == len(conjuntos[i]):
+                    num_optimas+=1
+                    continue
+                conjunto_max = conjuntos[i]
+                tamaño_max = len(conjuntos[i])
+                num_optimas=1
+                    
+        tiempo_fin = time.time()
+        if tiempo_fin-tiempo_inicio<=60:
+            tiempo_brute.append(tiempo_fin-tiempo_inicio)
+        else:
+            st.write("Se excede el tiempo máximo permitido en el intento: ",len(tiempo_brute)+1)
+            break
+
+    
+    st.write("Numero de lineas Fuerza Bruta:", len(tiempo_brute))
+    st.write(tiempo_brute)
+
+    
+
+
+
+if button_lineal:
+    st.write("Time Test")
+    time_lineal =[]
+    for l in range(1000,10000):
+        st.session_state.ctest = l
+        x=[]
+        y=[]
+        xoy=[]
+        lines = []
+        lineslist =[]
+        check_lines =[]
+        if not checkbox:
+            for i in range(st.session_state.ctest):
+                xoy.append(random.choice(["x","y"]))
+        else:
+            for i in range(st.session_state.ctest):
+                if len(xoy)<porcentaje:
+                    xoy.append("x")
+                else:
+                    xoy.append("y")
+        for i in range(0,st.session_state.ctest):
+            lines.append("L"+str(i))
+            lineslist.append("L"+str(i))
+            lineslist.append("L"+str(i))
+            check_lines.append(True)
+            temporal = random.choice(rangoxy)
+            initial_point = random.choice(possible)
+            temporal_range = rangominmax(initial_point,rangoxy,minmax)
+            if xoy[i] ==  "x":
+                x.append(temporal)
+                x.append(temporal)
+                point = random.choice(temporal_range)
+                if point>=initial_point:
+                    y.append(initial_point)
+                    y.append(point)
+                else:
+                    y.append(point)
+                    y.append(initial_point)
+            else:  
+                point = random.choice(temporal_range)     
+                if point >= initial_point:
+                    x.append(initial_point)
+                    x.append(point)
+                else:
+                    x.append(point)
+                    x.append(initial_point)
+                y.append(temporal)
+                y.append(temporal)
+        st.session_state.linestest = list(lines)
+        st.session_state.datatest = pd.DataFrame(list(zip(lineslist,x, y)),columns =["Lines",'x', 'y'])
+        st.session_state.datalinestest = pd.DataFrame(list(zip(lines, check_lines)),columns =['Lines', 'CheckBox'])
+        st.session_state.minmaxtest = values
+
+        modelo = p.LpProblem('Lineal_Solution', p.LpMaximize)
+
+        X = p.LpVariable.dicts("Linea", st.session_state.linestest, lowBound=0, upBound=1, cat=p.LpInteger)
+        modelo += p.lpSum(X[linea] for linea in st.session_state.linestest)
+        for i in range(0,len(st.session_state.datatest["x"]),2):
+            Li = st.session_state.datatest["Lines"][i]
+            for j in range(i+2,len(st.session_state.datatest["x"]),2):
+                Lj = st.session_state.datatest["Lines"][j]
+                l1x = list(st.session_state.datatest["x"][i:i+2])
+                l1y = list(st.session_state.datatest["y"][i:i+2])
+                l2x = list(st.session_state.datatest["x"][j:j+2])
+                l2y = list(st.session_state.datatest["y"][j:j+2])
+                if se_intersectan(l1x,l1y,l2x,l2y):
+                    modelo += X[Li] + X[Lj] <= 1, 'Restriccion de Intereseccion '+Li+'_'+Lj
+        solucion = modelo.solve()
+
+        if modelo.solutionTime<=60:
+            time_lineal.append(modelo.solutionTime)
+            st.write("iteracion:", l )
+        else:
+            st.write("Se excede el tiempo máximo permitido en el intento: ",l+1)
+            break
+    
+    st.write("Numero de lineas Solucion Lineal:", len(time_lineal))
+    st.write(time_lineal)
+    
+if button_comp:
+    worst = 1
+    st.write("Comparacion OPT  ENTERO/FRACC")
+    inicio_total = time.time()
+    for i in range(100):
+        st.session_state.ctest = c
+        x=[]
+        y=[]
+        xoy=[]
+        lines = []
+        lineslist =[]
+        check_lines =[]
+        if not checkbox:
+            for i in range(st.session_state.ctest):
+                xoy.append(random.choice(["x","y"]))
+        else:
+            for i in range(st.session_state.ctest):
+                if len(xoy)<porcentaje:
+                    xoy.append("x")
+                else:
+                    xoy.append("y")
+        for i in range(0,st.session_state.ctest):
+            lines.append("L"+str(i))
+            lineslist.append("L"+str(i))
+            lineslist.append("L"+str(i))
+            check_lines.append(True)
+            temporal = random.choice(rangoxy)
+            initial_point = random.choice(possible)
+            temporal_range = rangominmax(initial_point,rangoxy,minmax)
+            if xoy[i] ==  "x":
+                x.append(temporal)
+                x.append(temporal)
+                point = random.choice(temporal_range)
+                if point>=initial_point:
+                    y.append(initial_point)
+                    y.append(point)
+                else:
+                    y.append(point)
+                    y.append(initial_point)
+            else:  
+                point = random.choice(temporal_range)     
+                if point >= initial_point:
+                    x.append(initial_point)
+                    x.append(point)
+                else:
+                    x.append(point)
+                    x.append(initial_point)
+                y.append(temporal)
+                y.append(temporal)
+        st.session_state.linestest = list(lines)
+        st.session_state.datatest = pd.DataFrame(list(zip(lineslist,x, y)),columns =["Lines",'x', 'y'])
+        st.session_state.datalinestest = pd.DataFrame(list(zip(lines, check_lines)),columns =['Lines', 'CheckBox'])
+        st.session_state.minmaxtest = values
+
+        #COMPARACION OPT/ALG
+        
+        modelo = p.LpProblem('Lineal_Solution', p.LpMaximize)
+
+        X = p.LpVariable.dicts("Linea", st.session_state.linestest, lowBound=0, upBound=1, cat=p.LpInteger)
+        modelo += p.lpSum(X[linea] for linea in st.session_state.linestest)
+        for i in range(0,len(st.session_state.datatest["x"]),2):
+            Li = st.session_state.datatest["Lines"][i]
+            for j in range(i+2,len(st.session_state.datatest["x"]),2):
+                Lj = st.session_state.datatest["Lines"][j]
+                l1x = list(st.session_state.datatest["x"][i:i+2])
+                l1y = list(st.session_state.datatest["y"][i:i+2])
+                l2x = list(st.session_state.datatest["x"][j:j+2])
+                l2y = list(st.session_state.datatest["y"][j:j+2])
+                if se_intersectan(l1x,l1y,l2x,l2y):
+                    modelo += X[Li] + X[Lj] <= 1, 'Restriccion de Intereseccion '+Li+'_'+Lj
+        solucion = modelo.solve()
+        OPT = int(p.value(modelo.objective))
+        #st.write("Tamaño Máximo de la Solucion Por Programacion Lineal: ",str(OPT))
+        
+        modelo2 = p.LpProblem('Lineal_Solution', p.LpMaximize)
+
+        X = p.LpVariable.dicts("Linea", st.session_state.linestest, lowBound=0, upBound=1, cat='Continuous')
+        modelo2 += p.lpSum(X[linea] for linea in st.session_state.linestest)
+        for i in range(0,len(st.session_state.datatest["x"]),2):
+            Li = st.session_state.datatest["Lines"][i]
+            for j in range(i+2,len(st.session_state.datatest["x"]),2):
+                Lj = st.session_state.datatest["Lines"][j]
+                l1x = list(st.session_state.datatest["x"][i:i+2])
+                l1y = list(st.session_state.datatest["y"][i:i+2])
+                l2x = list(st.session_state.datatest["x"][j:j+2])
+                l2y = list(st.session_state.datatest["y"][j:j+2])
+                if se_intersectan(l1x,l1y,l2x,l2y):
+                    modelo2 += X[Li] + X[Lj] <= 1, 'Restriccion de Intereseccion '+Li+'_'+Lj
+        solucion = modelo2.solve()
+        ALG = int(p.value(modelo2.objective))
+
+
+        if worst<OPT/ALG:
+            worst = OPT/ALG
+            st.session_state.datacomp = st.session_state.datatest
+            lista_solucion =[]
+            lista_name =[]
+            for v in modelo2.variables():
+                lista_solucion.append(int(v.varValue))
+                lista_name.append(v.name.replace("Linea_",""))
+            final_solution =pd.DataFrame(list(zip(lista_name, lista_solucion)),columns =['Lines', 'Solution'])
+            lista_solucion =[]
+            lista_name =[]
+            for v in modelo.variables():
+                lista_solucion.append(int(v.varValue))
+                lista_name.append(v.name.replace("Linea_",""))
+            final_solution2 =pd.DataFrame(list(zip(lista_name, lista_solucion)),columns =['Lines', 'Solution'])
+            
+
+    tiempo_final = time.time() - inicio_total
+    st.write("El peor caso de ENTERO/FRACC en 100 casos aleatorios es:",worst)
+    st.write("Calculado en:",tiempo_final,"segundos")
+    st.dataframe(st.session_state.datacomp)
+    st.dataframe(final_solution)
+    st.dataframe(final_solution2)
+    fig, ax = plt.subplots()
+    plt.axhline(0,color='black')
+    plt.axvline(0,color='black')
+    for i in range(0, len(st.session_state.datacomp["x"]), 2):
+            plt.plot(st.session_state.datacomp["x"][i:i+2], st.session_state.datacomp["y"][i:i+2], 'o-')
+
+
+    plt.xlim(st.session_state.minmaxtest[0]-2, st.session_state.minmaxtest[1]+2)
+    plt.ylim(st.session_state.minmaxtest[0]-2, st.session_state.minmaxtest[1]+2) 
+    plt.minorticks_on()
+    plt.grid( True, 'minor', markevery=2, linestyle='--' )
+    plt.grid( True, 'major', markevery=10 )
+    plt.title('Randomly Generated Lines Problem Worst Comparative Value')
+    st.pyplot(fig)
