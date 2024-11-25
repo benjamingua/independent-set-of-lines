@@ -462,7 +462,7 @@ if button_lineal:
     st.write(time_lineal)
     
 if button_comp:
-    worst = 1
+    worst = 0
     st.write("Comparacion OPT  ENTERO/FRACC")
     inicio_total = time.time()
     for i in range(100):
