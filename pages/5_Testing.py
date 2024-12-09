@@ -131,15 +131,15 @@ with st.container(border=True):
 
 col1, col2,col3,col4 = st.columns(4)
 with col1:
-    worst_case = st.button("Worst Case in 100 random cases",disabled=False)
+    worst_case = st.button("Worst Case in 100 random cases",disabled=True)
 
 with col2:
-    time_test = st.button("Time experiment \nbrute force",disabled=False)
-    button_lineal = st.button("Time experiment \nlineal solution", disabled=False)
-    time_aprox = st.button("Time experiment \n2-Aprox", disabled=False)
+    time_test = st.button("Time experiment \nbrute force",disabled=True)
+    button_lineal = st.button("Time experiment \nlineal solution", disabled=True)
+    time_aprox = st.button("Time experiment \n2-Aprox", disabled=True)
 
 with col3:
-    button_comp = st.button("Comparacion Entera/Fraccionaria",disabled=False)    
+    button_comp = st.button("Comparacion Entera/Fraccionaria",disabled=True)    
 
 ####################################
 
