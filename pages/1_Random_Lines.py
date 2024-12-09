@@ -30,7 +30,7 @@ def calcular_porcentaje(percent, total):
     return porcentaje
 
 
-def se_intersectan(l1x,l1y,l2x,l2y):
+def se_intersecan(l1x,l1y,l2x,l2y):
     if (l1x[0]==l1x[1]) and (l2x[0] == l2x[1]):
         if l1x[0]==l2x[0]:
             return (l1y[1]>l2y[0]) and (l1y[0]<l2y[1])
@@ -46,7 +46,7 @@ def se_intersectan(l1x,l1y,l2x,l2y):
     else:
         return (l2x[0]<l1x[0]<l2x[1]) and (l1y[0]<l2y[0]<l1y[1]) 
 
-def se_intersectan2(l1,l2):
+def se_intersecan2(l1,l2):
     if (l1['x0']==l1['x1']) and (l2['x0']==l2['x1']):
         if l1['x0']==l2['x0']:
             return (l1['y1']>l2['y0']) and (l1['y0']<l2['y1'])
@@ -74,7 +74,7 @@ def solutions_subsets_H(sub):
             l2x = [sub_sorted['x0'][i], sub_sorted['x1'][i]]
             l2y = [sub_sorted['y0'][i], sub_sorted['y1'][i]]
 
-            if not se_intersectan(l1x,l1y,l2x,l2y):
+            if not se_intersecan(l1x,l1y,l2x,l2y):
                 sub_solution = pd.concat([sub_solution, sub_sorted.iloc[[i]]])
     return sub_solution
 
@@ -93,7 +93,7 @@ def solutions_subsets_V(sub):
             l2x = [sub_sorted['x0'][i], sub_sorted['x1'][i]]
             l2y = [sub_sorted['y0'][i], sub_sorted['y1'][i]]
 
-            if not se_intersectan(l1x,l1y,l2x,l2y):
+            if not se_intersecan(l1x,l1y,l2x,l2y):
                 sub_solution = pd.concat([sub_solution, sub_sorted.iloc[[i]]])
     return sub_solution
 
@@ -227,10 +227,10 @@ with st.container():
                             l1y = list(st.session_state.dataframe["y"][i:i+2])
                             l2x = list(st.session_state.dataframe["x"][j:j+2])
                             l2y = list(st.session_state.dataframe["y"][j:j+2])
-                            if se_intersectan(l1x,l1y,l2x,l2y):
+                            if se_intersecan(l1x,l1y,l2x,l2y):
                                 Line_1p.append("L"+str(i//2))
                                 Line_2p.append("L"+str(j//2))
-                                Intersectionp.append(se_intersectan(l1x,l1y,l2x,l2y))
+                                Intersectionp.append(se_intersecan(l1x,l1y,l2x,l2y))
         else:
             for i in range(0,len(st.session_state.dataframe["x"]),2):
                 for j in range(i+2,len(st.session_state.dataframe["x"]),2):
@@ -238,10 +238,10 @@ with st.container():
                     l1y = list(st.session_state.dataframe["y"][i:i+2])
                     l2x = list(st.session_state.dataframe["x"][j:j+2])
                     l2y = list(st.session_state.dataframe["y"][j:j+2])
-                    if se_intersectan(l1x,l1y,l2x,l2y):
+                    if se_intersecan(l1x,l1y,l2x,l2y):
                         Line_1p.append("L"+str(i//2))
                         Line_2p.append("L"+str(j//2))
-                        Intersectionp.append(se_intersectan(l1x,l1y,l2x,l2y))
+                        Intersectionp.append(se_intersecan(l1x,l1y,l2x,l2y))
 
         intersecciones = pd.DataFrame({'Line 1':Line_1p , 'Line 2': Line_2p, "Intersection":Intersectionp})  
         st.write("Dataframe Intersecciones")      
@@ -271,10 +271,10 @@ with st.container():
                     l1y = list(st.session_state.dataframe["y"][i:i+2])
                     l2x = list(st.session_state.dataframe["x"][j:j+2])
                     l2y = list(st.session_state.dataframe["y"][j:j+2])
-                    if se_intersectan(l1x,l1y,l2x,l2y):
+                    if se_intersecan(l1x,l1y,l2x,l2y):
                         Line_1.append("L"+str(i//2))
                         Line_2.append("L"+str(j//2))
-                        Intersection.append(se_intersectan(l1x,l1y,l2x,l2y))
+                        Intersection.append(se_intersecan(l1x,l1y,l2x,l2y))
             conjunto_max = []
             tamaño_max = 0 
             num_optimas = 0      
@@ -330,7 +330,7 @@ with st.container():
                     l1y = list(st.session_state.dataframe["y"][i:i+2])
                     l2x = list(st.session_state.dataframe["x"][j:j+2])
                     l2y = list(st.session_state.dataframe["y"][j:j+2])
-                    if se_intersectan(l1x,l1y,l2x,l2y):
+                    if se_intersecan(l1x,l1y,l2x,l2y):
                         modelo += X[Li] + X[Lj] <= 1, 'Restriccion de Intereseccion '+Li+'_'+Lj
             solucion = modelo.solve()
             st.write("Tamaño Máximo de la Solucion Por Programacion Lineal: ",str(int(p.value(modelo.objective))))
@@ -403,7 +403,7 @@ with st.container():
                     l1y = list(st.session_state.dataframe["y"][i:i+2])
                     l2x = list(st.session_state.dataframe["x"][j:j+2])
                     l2y = list(st.session_state.dataframe["y"][j:j+2])
-                    if se_intersectan(l1x,l1y,l2x,l2y):
+                    if se_intersecan(l1x,l1y,l2x,l2y):
                         modelo += X[Li] + X[Lj] <= 1, 'Restriccion de Intereseccion '+Li+'_'+Lj
             solucion = modelo.solve()
             st.write("Tamaño Máximo de la Solucion: ",str(int(p.value(modelo.objective))))

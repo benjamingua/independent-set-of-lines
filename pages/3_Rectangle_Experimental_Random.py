@@ -121,7 +121,7 @@ with st.container(border=True):
     rangoxy = np.arange(values[0],values[1]+0.5,0.5)
     possibleX = viable_point(rangoxy,minmaxLenght)
     possibleY = viable_point(rangoxy,minmaxWidth)
-    c = st.slider("Number of Rectangles", 0, 1000, 1)
+    c = st.slider("Number of Rectangles", 0, 100, 1)
 
 
     if st.button("Let's graph"):
@@ -170,13 +170,8 @@ for i in range(0, len(st.session_state.datarec["x"]), 4):
     name = "R"+str(i//4)
     rectangles[name] = order_rectangle(graph)
     graph = pd.concat([graph,st.session_state.datarec.iloc[i:i+1]], ignore_index=True)
-    #color = np.random.rand(3,)  # RGB aleatorio entre 0 y 1
-    
-    # Rellenar el área del rectángulo con el color aleatorio
     plt.fill(graph["x"], graph["y"], alpha=0.5)
-    
-    # Opcional: Dibujar los bordes del rectángulo
-    plt.plot(graph["x"], graph["y"], 'o-', color='black')
+    plt.plot(graph["x"], graph["y"], 'o-')
 
 
 plt.minorticks_on()

@@ -31,7 +31,7 @@ def calcular_porcentaje(percent, total):
     return porcentaje
 
 
-def se_intersectan(l1x,l1y,l2x,l2y):
+def se_intersecan(l1x,l1y,l2x,l2y):
     if (l1x[0]==l1x[1]) and (l2x[0] == l2x[1]):
         if l1x[0]==l2x[0]:
             return (l1y[1]>l2y[0]) and (l1y[0]<l2y[1])
@@ -47,7 +47,7 @@ def se_intersectan(l1x,l1y,l2x,l2y):
     else:
         return (l2x[0]<l1x[0]<l2x[1]) and (l1y[0]<l2y[0]<l1y[1]) 
 
-def se_intersectan2(l1,l2):
+def se_intersecan2(l1,l2):
     if (l1['x0']==l1['x1']) and (l2['x0']==l2['x1']):
         if l1['x0']==l2['x0']:
             return (l1['y1']>l2['y0']) and (l1['y0']<l2['y1'])
@@ -75,7 +75,7 @@ def solutions_subsets_H(sub):
             l2x = [sub_sorted['x0'][i], sub_sorted['x1'][i]]
             l2y = [sub_sorted['y0'][i], sub_sorted['y1'][i]]
 
-            if not se_intersectan(l1x,l1y,l2x,l2y):
+            if not se_intersecan(l1x,l1y,l2x,l2y):
                 sub_solution = pd.concat([sub_solution, sub_sorted.iloc[[i]]])
     return sub_solution
 
@@ -94,7 +94,7 @@ def solutions_subsets_V(sub):
             l2x = [sub_sorted['x0'][i], sub_sorted['x1'][i]]
             l2y = [sub_sorted['y0'][i], sub_sorted['y1'][i]]
 
-            if not se_intersectan(l1x,l1y,l2x,l2y):
+            if not se_intersecan(l1x,l1y,l2x,l2y):
                 sub_solution = pd.concat([sub_solution, sub_sorted.iloc[[i]]])
     return sub_solution
 
@@ -121,26 +121,30 @@ with st.container(border=True):
     c = st.slider("Number of Lines", 0, 100, 10)
     checkbox = st.checkbox(" % of vertical and horizontal lines.",key="percent")
     if checkbox:
-        parte = st.slider("% of Lines Vertical", 0, 100, step=10)
+        parte = st.slider("% of Lines Vertical", 0, 100, step=5)
         porcentaje = calcular_porcentaje(parte,c)
         st.write("Number of Vertical Lines: " + str(porcentaje))
         st.write("Number of Horizontal Lines: "+ str(c-porcentaje))
 
+####################################
+#  BOTONES
+
 col1, col2,col3,col4 = st.columns(4)
 with col1:
-    worst_case = st.button("Worst Case in 100 random cases")
+    worst_case = st.button("Worst Case in 100 random cases",disabled=False)
 
 with col2:
-    time_test = st.button("Time experiment brute force")
+    time_test = st.button("Time experiment \nbrute force",disabled=False)
+    button_lineal = st.button("Time experiment \nlineal solution", disabled=False)
+    time_aprox = st.button("Time experiment \n2-Aprox", disabled=False)
 
 with col3:
-    button_lineal = st.button("Time experiment lineal solution", disabled=True)
+    button_comp = st.button("Comparacion Entera/Fraccionaria",disabled=False)    
 
-with col4:
-    button_comp = st.button("Comparacion Entera/Fraccionaria")    
+####################################
 
 if worst_case:
-    worst = 1
+    worst = 0
     st.write("Comparacion OPT / 2-aprox")
     inicio_total = time.time()
     for i in range(100):
@@ -195,8 +199,8 @@ if worst_case:
 
         #COMPARACION OPT/ALG
         
+        # Lineal Solution
         modelo = p.LpProblem('Lineal_Solution', p.LpMaximize)
-
         X = p.LpVariable.dicts("Linea", st.session_state.linestest, lowBound=0, upBound=1, cat=p.LpInteger)
         modelo += p.lpSum(X[linea] for linea in st.session_state.linestest)
         for i in range(0,len(st.session_state.datatest["x"]),2):
@@ -207,12 +211,13 @@ if worst_case:
                 l1y = list(st.session_state.datatest["y"][i:i+2])
                 l2x = list(st.session_state.datatest["x"][j:j+2])
                 l2y = list(st.session_state.datatest["y"][j:j+2])
-                if se_intersectan(l1x,l1y,l2x,l2y):
+                if se_intersecan(l1x,l1y,l2x,l2y):
                     modelo += X[Li] + X[Lj] <= 1, 'Restriccion de Intereseccion '+Li+'_'+Lj
         solucion = modelo.solve()
         OPT = int(p.value(modelo.objective))
         #st.write("Tamaño Máximo de la Solucion Por Programacion Lineal: ",str(OPT))
         
+        # 2 - APROX Solution
         Line_H = pd.DataFrame({'x0':[] , 'y0': [],'x1':[],'y1':[]})
         Line_V = pd.DataFrame({'x0':[] , 'y0': [],'x1':[],'y1':[]})
         for i in range(0,len(st.session_state.datatest["x"]),2):
@@ -276,12 +281,15 @@ if worst_case:
     st.pyplot(fig)
 
 if time_test:
-    st.write("Time Test")
+    st.write("Time Test Brute Force")
     # FUERZA BRUTA
+
     tiempo_brute = []
-    
+    iteracion = []
+    progress_text = "Operation in progress. Please wait."
+    my_bar = st.progress(0, text=progress_text)
     for l in range(1,100):
-        st.write("Iteracion:",l)
+        my_bar.progress(l, text=progress_text)
         st.session_state.ctest = l
         x=[]
         y=[]
@@ -342,10 +350,10 @@ if time_test:
                 l1y = list(st.session_state.datatest["y"][i:i+2])
                 l2x = list(st.session_state.datatest["x"][j:j+2])
                 l2y = list(st.session_state.datatest["y"][j:j+2])
-                if se_intersectan(l1x,l1y,l2x,l2y):
+                if se_intersecan(l1x,l1y,l2x,l2y):
                     Line_1.append("L"+str(i//2))
                     Line_2.append("L"+str(j//2))
-                    Intersection.append(se_intersectan(l1x,l1y,l2x,l2y))
+                    Intersection.append(se_intersecan(l1x,l1y,l2x,l2y))
         conjunto_max = []
         tamaño_max = 0 
         num_optimas = 0      
@@ -369,23 +377,31 @@ if time_test:
                     
         tiempo_fin = time.time()
         if tiempo_fin-tiempo_inicio<=60:
+            iteracion.append(l)
             tiempo_brute.append(tiempo_fin-tiempo_inicio)
         else:
-            st.write("Se excede el tiempo máximo permitido en el intento: ",len(tiempo_brute)+1)
+            iteracion.append(l)
+            tiempo_brute.append(tiempo_fin-tiempo_inicio)
+            st.write("Se excede el tiempo máximo permitido en el intento: ",len(tiempo_brute))
             break
 
     
-    st.write("Numero de lineas Fuerza Bruta:", len(tiempo_brute))
-    st.write(tiempo_brute)
+    
+    data_brute = pd.DataFrame(list(zip(iteracion, tiempo_brute)),columns =['iteration', 'tiempo'])
+    st.dataframe(data_brute,hide_index=True)
 
     
 
 
 
 if button_lineal:
-    st.write("Time Test")
+    st.write("Time Test Lineal Solution")
     time_lineal =[]
-    for l in range(1000,10000):
+    iteracion = []
+    progress_text = "Operation in progress. Please wait."
+    my_bar = st.progress(0, text=progress_text)
+    for l in range(1,2000,10):
+        my_bar.progress(l*100//2000, text=progress_text)
         st.session_state.ctest = l
         x=[]
         y=[]
@@ -447,22 +463,28 @@ if button_lineal:
                 l1y = list(st.session_state.datatest["y"][i:i+2])
                 l2x = list(st.session_state.datatest["x"][j:j+2])
                 l2y = list(st.session_state.datatest["y"][j:j+2])
-                if se_intersectan(l1x,l1y,l2x,l2y):
+                if se_intersecan(l1x,l1y,l2x,l2y):
                     modelo += X[Li] + X[Lj] <= 1, 'Restriccion de Intereseccion '+Li+'_'+Lj
         solucion = modelo.solve()
 
         if modelo.solutionTime<=60:
             time_lineal.append(modelo.solutionTime)
-            st.write("iteracion:", l )
+            iteracion.append(l)
         else:
-            st.write("Se excede el tiempo máximo permitido en el intento: ",l+1)
+            time_lineal.append(modelo.solutionTime)
+            iteracion.append(l)
+            st.write("Se excede el tiempo máximo permitido en el intento: ",l)
             break
     
-    st.write("Numero de lineas Solucion Lineal:", len(time_lineal))
-    st.write(time_lineal)
+    
+
+    data_lineal = pd.DataFrame(list(zip(iteracion, time_lineal)),columns =['iteration', 'tiempo'])
+    st.dataframe(data_lineal,hide_index=True)
+    
+    
     
 if button_comp:
-    worst = 1
+    worst = 0
     st.write("Comparacion OPT  ENTERO/FRACC")
     inicio_total = time.time()
     for i in range(100):
@@ -529,7 +551,7 @@ if button_comp:
                 l1y = list(st.session_state.datatest["y"][i:i+2])
                 l2x = list(st.session_state.datatest["x"][j:j+2])
                 l2y = list(st.session_state.datatest["y"][j:j+2])
-                if se_intersectan(l1x,l1y,l2x,l2y):
+                if se_intersecan(l1x,l1y,l2x,l2y):
                     modelo += X[Li] + X[Lj] <= 1, 'Restriccion de Intereseccion '+Li+'_'+Lj
         solucion = modelo.solve()
         OPT = int(p.value(modelo.objective))
@@ -547,19 +569,19 @@ if button_comp:
                 l1y = list(st.session_state.datatest["y"][i:i+2])
                 l2x = list(st.session_state.datatest["x"][j:j+2])
                 l2y = list(st.session_state.datatest["y"][j:j+2])
-                if se_intersectan(l1x,l1y,l2x,l2y):
+                if se_intersecan(l1x,l1y,l2x,l2y):
                     modelo2 += X[Li] + X[Lj] <= 1, 'Restriccion de Intereseccion '+Li+'_'+Lj
         solucion = modelo2.solve()
         ALG = int(p.value(modelo2.objective))
 
 
-        if worst<OPT/ALG:
-            worst = OPT/ALG
+        if worst<ALG/OPT:
+            worst = ALG/OPT
             st.session_state.datacomp = st.session_state.datatest
             lista_solucion =[]
             lista_name =[]
             for v in modelo2.variables():
-                lista_solucion.append(int(v.varValue))
+                lista_solucion.append(float(v.varValue))
                 lista_name.append(v.name.replace("Linea_",""))
             final_solution =pd.DataFrame(list(zip(lista_name, lista_solucion)),columns =['Lines', 'Solution'])
             lista_solucion =[]
@@ -590,3 +612,119 @@ if button_comp:
     plt.grid( True, 'major', markevery=10 )
     plt.title('Randomly Generated Lines Problem Worst Comparative Value')
     st.pyplot(fig)
+
+
+if time_aprox:
+    st.write("Time Test 2-Aprox")
+    tiempo_aprox = []
+    iteracion = []
+    progress_text = "Operation in progress. Please wait."
+    my_bar = st.progress(0, text=progress_text)
+    for l in range(1,150000,500):
+        my_bar.progress(l*100//150000, text=progress_text)
+        st.session_state.ctest = l
+        x=[]
+        y=[]
+        xoy=[]
+        lines = []
+        lineslist =[]
+        check_lines =[]
+        if not checkbox:
+            for i in range(st.session_state.ctest):
+                xoy.append(random.choice(["x","y"]))
+        else:
+            for i in range(st.session_state.ctest):
+                if len(xoy)<porcentaje:
+                    xoy.append("x")
+                else:
+                    xoy.append("y")
+        for i in range(0,st.session_state.ctest):
+            lines.append("L"+str(i))
+            lineslist.append("L"+str(i))
+            lineslist.append("L"+str(i))
+            check_lines.append(True)
+            temporal = random.choice(rangoxy)
+            initial_point = random.choice(possible)
+            temporal_range = rangominmax(initial_point,rangoxy,minmax)
+            if xoy[i] ==  "x":
+                x.append(temporal)
+                x.append(temporal)
+                point = random.choice(temporal_range)
+                if point>=initial_point:
+                    y.append(initial_point)
+                    y.append(point)
+                else:
+                    y.append(point)
+                    y.append(initial_point)
+            else:  
+                point = random.choice(temporal_range)     
+                if point >= initial_point:
+                    x.append(initial_point)
+                    x.append(point)
+                else:
+                    x.append(point)
+                    x.append(initial_point)
+                y.append(temporal)
+                y.append(temporal)
+        st.session_state.linestest = list(lines)
+        st.session_state.datatest = pd.DataFrame(list(zip(lineslist,x, y)),columns =["Lines",'x', 'y'])
+        st.session_state.datalinestest = pd.DataFrame(list(zip(lines, check_lines)),columns =['Lines', 'CheckBox'])
+        st.session_state.minmaxtest = values
+
+        tiempo_inicio = time.time()
+
+        Line_H = pd.DataFrame({'x0':[] , 'y0': [],'x1':[],'y1':[]})
+        Line_V = pd.DataFrame({'x0':[] , 'y0': [],'x1':[],'y1':[]})
+        for i in range(0,len(st.session_state.datatest["x"]),2):
+            
+            if st.session_state.datatest["x"][i]==st.session_state.datatest["x"][i+1]:
+                Line_V.loc[len(Line_V)] = [st.session_state.datatest["x"][i], st.session_state.datatest["y"][i], st.session_state.datatest["x"][i+1], st.session_state.datatest["y"][i+1]]
+            else:
+                Line_H.loc[len(Line_H)] = [st.session_state.datatest["x"][i], st.session_state.datatest["y"][i], st.session_state.datatest["x"][i+1], st.session_state.datatest["y"][i+1]]
+
+        # Crear un diccionario para almacenar los subconjuntos
+        subsetsH = {}
+        subsetsV = {}
+        solution_H = pd.DataFrame({'x0':[] , 'y0': [],'x1':[],'y1':[]})
+        solution_V = pd.DataFrame({'x0':[] , 'y0': [],'x1':[],'y1':[]})
+        # Recorrer los grupos
+        for y0_value, group in Line_H.groupby('y0'):
+            if len(group) > 1:  # Verificar si el grupo tiene más de 1 fila
+                subsetsH[y0_value] = group
+            else:
+                solution_H = pd.concat([solution_H, group])
+
+        for y0_value, group in Line_V.groupby('x0'):
+            if len(group) > 1:  # Verificar si el grupo tiene más de 1 fila
+                subsetsV[y0_value] = group
+            else:
+                solution_V = pd.concat([solution_V, group])
+
+        for item in subsetsH:
+            solution_H = pd.concat([solution_H, solutions_subsets_H(subsetsH[item])]) 
+        for item in subsetsV:
+            solution_V = pd.concat([solution_V, solutions_subsets_V(subsetsV[item])]) 
+
+        
+        if len(solution_V)>len(solution_H):
+            final = solution_V.reset_index(drop=True) 
+        else:
+            final = solution_H.reset_index(drop=True)
+
+        tiempo_fin = time.time()-tiempo_inicio
+        if tiempo_fin<=60:
+            iteracion.append(l)
+            tiempo_aprox.append(tiempo_fin)
+        else:
+            iteracion.append(l)
+            tiempo_aprox.append(tiempo_fin)
+            st.write("Se excede el tiempo máximo permitido en el intento: ",l)
+            break 
+
+
+        
+    data_aprox = pd.DataFrame(list(zip(iteracion, tiempo_aprox)),columns =['iteration', 'tiempo'])
+    st.dataframe(data_aprox,hide_index=True)
+        
+
+        
