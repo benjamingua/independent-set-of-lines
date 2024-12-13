@@ -133,7 +133,7 @@ with st.container(border=True):
 #  BOTONES
 
 col1, col2,col3,col4 = st.columns(4)
-disabled = False
+disabled = True
 with col1:
     worst_case = st.button("Worst Case in 100 random cases",disabled=disabled)
 
