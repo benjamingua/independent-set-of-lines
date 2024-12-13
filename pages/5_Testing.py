@@ -112,6 +112,9 @@ if 'datatest' not in st.session_state:
     st.session_state.linestest = []
     st.session_state.disabledtest = False
 
+################################################################################################################################################
+#  PARAMETROS
+
 with st.container(border=True):
     values = st.slider("Select a range of the axes (square cartesian axis)", -100.0, 100.0,(-20.0,20.0),step=0.5)
     dif = values[1]-values[0]
@@ -126,22 +129,23 @@ with st.container(border=True):
         st.write("Number of Vertical Lines: " + str(porcentaje))
         st.write("Number of Horizontal Lines: "+ str(c-porcentaje))
 
-####################################
+################################################################################################################################################
 #  BOTONES
 
 col1, col2,col3,col4 = st.columns(4)
+disabled = False
 with col1:
-    worst_case = st.button("Worst Case in 100 random cases",disabled=True)
+    worst_case = st.button("Worst Case in 100 random cases",disabled=disabled)
 
 with col2:
-    time_test = st.button("Time experiment \nbrute force",disabled=True)
-    button_lineal = st.button("Time experiment \nlineal solution", disabled=True)
-    time_aprox = st.button("Time experiment \n2-Aprox", disabled=True)
+    time_test = st.button("Time experiment \nbrute force",disabled=disabled)
+    button_lineal = st.button("Time experiment \nlineal solution", disabled=disabled)
+    time_aprox = st.button("Time experiment \n2-Aprox", disabled=disabled)
 
 with col3:
-    button_comp = st.button("Comparacion Entera/Fraccionaria",disabled=True)    
+    button_comp = st.button("Comparacion Entera/Fraccionaria",disabled=disabled)    
 
-####################################
+################################################################################################################################################
 
 if worst_case:
     worst = 0
@@ -487,7 +491,11 @@ if button_comp:
     worst = 0
     st.write("Comparacion OPT  ENTERO/FRACC")
     inicio_total = time.time()
+    progress_text = "Operation in progress. Please wait."
+    my_bar = st.progress(0, text=progress_text)
+    all_sol = []
     for i in range(100):
+        my_bar.progress((i+1)*100//100, text=progress_text)
         st.session_state.ctest = c
         x=[]
         y=[]
@@ -553,7 +561,7 @@ if button_comp:
                 l2y = list(st.session_state.datatest["y"][j:j+2])
                 if se_intersecan(l1x,l1y,l2x,l2y):
                     modelo += X[Li] + X[Lj] <= 1, 'Restriccion de Intereseccion '+Li+'_'+Lj
-        solucion = modelo.solve()
+        solucion = modelo.solve(p.PULP_CBC_CMD(msg=1, timeLimit=600))
         OPT = int(p.value(modelo.objective))
         #st.write("Tamaño Máximo de la Solucion Por Programacion Lineal: ",str(OPT))
         
@@ -574,9 +582,13 @@ if button_comp:
         solucion = modelo2.solve()
         ALG = int(p.value(modelo2.objective))
 
-
+        all_sol.append([OPT,ALG])
         if worst<ALG/OPT:
             worst = ALG/OPT
+            timeOPT=modelo.solutionTime
+            timeALG=modelo2.solutionTime
+            WOPT = OPT
+            WALG = ALG
             st.session_state.datacomp = st.session_state.datatest
             lista_solucion =[]
             lista_name =[]
@@ -590,28 +602,37 @@ if button_comp:
                 lista_solucion.append(int(v.varValue))
                 lista_name.append(v.name.replace("Linea_",""))
             final_solution2 =pd.DataFrame(list(zip(lista_name, lista_solucion)),columns =['Lines', 'Solution'])
-            
+        
 
     tiempo_final = time.time() - inicio_total
     st.write("El peor caso de ENTERO/FRACC en 100 casos aleatorios es:",worst)
+    st.write("Entero:",WOPT)
+    st.write("Fraccionario:",WALG)
     st.write("Calculado en:",tiempo_final,"segundos")
+    st.write("Tiempor Entero:",timeOPT,"segundos")
+    st.write("Tiempor Fraccionario:",timeALG,"segundos")
+    
     st.dataframe(st.session_state.datacomp)
     st.dataframe(final_solution)
     st.dataframe(final_solution2)
-    fig, ax = plt.subplots()
-    plt.axhline(0,color='black')
-    plt.axvline(0,color='black')
-    for i in range(0, len(st.session_state.datacomp["x"]), 2):
-            plt.plot(st.session_state.datacomp["x"][i:i+2], st.session_state.datacomp["y"][i:i+2], 'o-')
+
+    st.write(all_sol)
 
 
-    plt.xlim(st.session_state.minmaxtest[0]-2, st.session_state.minmaxtest[1]+2)
-    plt.ylim(st.session_state.minmaxtest[0]-2, st.session_state.minmaxtest[1]+2) 
-    plt.minorticks_on()
-    plt.grid( True, 'minor', markevery=2, linestyle='--' )
-    plt.grid( True, 'major', markevery=10 )
-    plt.title('Randomly Generated Lines Problem Worst Comparative Value')
-    st.pyplot(fig)
+    # fig, ax = plt.subplots()
+    # plt.axhline(0,color='black')
+    # plt.axvline(0,color='black')
+    # for i in range(0, len(st.session_state.datacomp["x"]), 2):
+    #         plt.plot(st.session_state.datacomp["x"][i:i+2], st.session_state.datacomp["y"][i:i+2], 'o-')
+
+
+    # plt.xlim(st.session_state.minmaxtest[0]-2, st.session_state.minmaxtest[1]+2)
+    # plt.ylim(st.session_state.minmaxtest[0]-2, st.session_state.minmaxtest[1]+2) 
+    # plt.minorticks_on()
+    # plt.grid( True, 'minor', markevery=2, linestyle='--' )
+    # plt.grid( True, 'major', markevery=10 )
+    # plt.title('Randomly Generated Lines Problem Worst Comparative Value')
+    # st.pyplot(fig)
 
 
 if time_aprox:

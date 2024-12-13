@@ -29,7 +29,7 @@ def viable_point(rango,sizeline):
 
 def order_rectangle(rectangle):
     if rectangle["x"][0]>rectangle["x"][2]:
-        if rectangle["y"][0]>rectangle["y"][1]:
+        if rectangle["y"][0]>rectangle["y"][2]:
             RU = [rectangle["x"][0], rectangle["y"][0]]
             RD = [rectangle["x"][1], rectangle["y"][1]]
             LU = [rectangle["x"][3], rectangle["y"][3]]
@@ -40,7 +40,7 @@ def order_rectangle(rectangle):
             LU = [rectangle["x"][2], rectangle["y"][2]]
             LD = [rectangle["x"][3], rectangle["y"][3]]
     else:
-        if rectangle["y"][0]>rectangle["y"][1]:
+        if rectangle["y"][0]>rectangle["y"][2]:
             RU = [rectangle["x"][3], rectangle["y"][3]]
             RD = [rectangle["x"][2], rectangle["y"][2]]
             LU = [rectangle["x"][0], rectangle["y"][0]]
